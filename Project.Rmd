@@ -1,0 +1,45 @@
+---
+title: "DOGE_Coin"
+author: "Shivam Patel"
+date: "3/3/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Load Library}
+library(httr)
+```
+
+
+```{r}
+# API KEY: 0YR02HPT5Z0LVCHN
+
+# getFXData <- function(from_currency, to_currency) {
+#   # API KEY
+#   avKey <- "0YR02HPT5Z0LVCHN"
+#   baseLink <- "https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE"
+#   
+#   avLinkGenerator <- paste(baseLink, 
+#                            "&from_currency=", from_currency, "&to_currency", to_currency, "&interval=60min", "&datatype=csv",
+#                            "&apikey=", avKey, sep = "")
+#   
+#   avRequest <- GET(avLinkGenerator)
+#   avParsed <- read.delim(text = content(avRequest, as = "text"), sep = ",")
+#   avParsed$timestamp <- as.Date(avParsed$timestamp)
+#   return(avParsed)
+# }
+# 
+# silverSpot <- getFXData("USD", "XAG")
+# 
+# testsilver <- GET("https://www.alphavantage.co/query?function=FX_INTRADAY&datatype=csv&from_symbol=USD&to_symbol=XAG&interval=60min&apikey=0YR02HPT5Z0LVCHN")
+# 
+# silverparsed <- read.delim(text = content(testsilver, as = "text"), sep = ",")
+
+
+doge_test <- GET("https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_DAILY&symbol=DOGE&market=CNY&datatype=csv&apikey=0YR02HPT5Z0LVCHN")
+dogeparsed <- read.delim(text = content(doge_test, as = "text"), sep = ",")
+```
+

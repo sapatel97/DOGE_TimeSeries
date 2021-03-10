@@ -11,6 +11,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r Load Library}
 library(httr)
+library(forecast)
+library(xts)
 ```
 
 
@@ -39,8 +41,8 @@ library(httr)
 # silverparsed <- read.delim(text = content(testsilver, as = "text"), sep = ",")
 
 
-doge_test <- GET("https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_DAILY&symbol=DOGE&market=CNY&datatype=csv&apikey=0YR02HPT5Z0LVCHN")
-dogeparsed <- read.delim(text = content(doge_test, as = "text"), sep = ",")
+# doge_test <- GET("https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_DAILY&symbol=DOGE&market=CNY&datatype=csv&apikey=0YR02HPT5Z0LVCHN")
+# dogeparsed <- read.delim(text = content(doge_test, as = "text"), sep = ",")
 
 #save(dogeparsed, file = "./data/DOGE.Rdata")
 # only uncomment to update the data to the most recent
@@ -51,11 +53,100 @@ dogeparsed <- read.delim(text = content(doge_test, as = "text"), sep = ",")
 # BEGIN PROJECT
 
 ```{r}
-dogeData <- load(file = "./data/DOGE.Rdata")
+load(file = "./data/DOGE.Rdata")
+```
+
+```{r Explore Data}
+head(dogeparsed)
+
+dogeparsed$timestamp <- as.Date(dogeparsed$timestamp)
+
+str(dogeparsed)
+```
+```{r Data Cleaning}
+dogeparsed <- dogeparsed[c(1,9)]
+doge_xts <- xts(dogeparsed[-1], order.by = dogeparsed$timestamp, frequency = 1)
+colnames(doge_xts) <- c("close")
+```
+
+```{r Plotting}
+autoplot(doge_xts[-1], main = "Dogecoin", ylab = "USD", xlab = "Time")
 ```
 
 
-```{r}
-train_split <- window(dogecoin, end = 486)
-```
+# ```{r Exploration}
+# autoplot(doge_ts[-1], main = "Dogecoin", ylab = "USD", xlab = "Time")
+# autoplot(doge_xts[-1], main = "Dogecoin", ylab = "USD", xlab = "Time")
+# snaive(doge_xts)
+# hw(doge_ts)
+# rwf(doge_xts)
+# 
+# vis <- window(doge_ts, end=c(2020,1)) #training data
+# vis2 <- window(doge_ts, start=c(2020, 1))# Test data
+# library(tsstudio)
+# test <- xts_to_ts(doge_xts, frequency = NULL, start = NULL)
+# 
+# plot(meanf(beer1, h=20), plot.conf=FALSE) #Forecasts produced by Average of Past Values method
+#     lines(naive(beer1, h=20)$mean, col="red") #Forecasts produced by Naive method
+#     lines(snaive(beer1, h=20)$mean, col="green") #Forcasts produced by Seasonal naive method
+#     lines(rwf(beer1, h=20, drift=TRUE)$mean, col="pink") #Forecasts produced by Drift method
+#     lines(window(ausbeer,start=2004)) #Actual data
+# 
+# train = doge_xts[,1][1:150]
+# test = doge_xts[,1][151:164]
+# 
+# adf.test(train[,1]) #p-value < 0.01: the time series is stationary
+# Acf(train[,1]) #indicates MA(3) model
+# Pacf(train[,1])
+# 
+# fit <- Arima(train[,1],order = c(0,0,3))
+# summary(fit)
+# 
+# tsdisplay(fit$residuals) #Check the residuals
+# Box.test(fit$residuals,lag=15, fitdf=3, type='Ljung') #fitdf is because it was MA(3)
+# 
+# plot(forecast(fit,h=10),include=80)
+# 
+# fit_ETS <- ets(doge_xts)
+# 
+# plot(doge_xts)
+# fit <- ets(doge_xts)
+# fcast1 <-forecast(fit, h=20)
+# summary(fit)
+# plot(fit)
+# accuracy(fit)
+# accuracy(fcast1$fitted, doge_xts)
+# plot(forecast(fit,level=c(50,80,95)))
+# plot(forecast(fit,fan =TRUE))
+# ```
+# 
+# ```{r}
+# 
+# plot(doge_xts)
+# plot(BoxCox(doge_xts,lambda=1/2))## Transformations with lamda = 1/2
+# plot(BoxCox(doge_xts,lambda=0))## Transformations with lamda = 0, which is natural logarithm
+# plot(BoxCox(doge_xts,lambda=-1))## Transformations with lamda = -1
+# 
+# plot(BoxCox(doge_xts,lambda=0))
+# fit <- snaive(doge_xts, lambda=0)
+# plot(fit)
+# plot(fit, include=120)
+# 
+# BoxCox.lambda(doge_xts) #mathematically optimal lambda, lambda = 0.2654076
+# plot(BoxCox(doge_xts,lambda=BoxCox.lambda(doge_xts)))
+# 
+# ndiffs(doge_xts)
+# nsdiffs(log(doge_xts))
+# 
+# plot(doge_xts)
+# # No obvious need for a transformation
+# tsdisplay(diff(doge_xts))
+# 
+# fit2 <- auto.arima(doge_xts)
+# summary(fit2)
+# # Over-ride choice of differencing, and only use one difference
+# fit3 <- auto.arima(doge_xts, d=2)
+# summary(fit3)
+# 
+# ```
 

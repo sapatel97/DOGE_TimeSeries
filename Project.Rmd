@@ -41,5 +41,21 @@ library(httr)
 
 doge_test <- GET("https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_DAILY&symbol=DOGE&market=CNY&datatype=csv&apikey=0YR02HPT5Z0LVCHN")
 dogeparsed <- read.delim(text = content(doge_test, as = "text"), sep = ",")
+
+#save(dogeparsed, file = "./data/DOGE.Rdata")
+# only uncomment to update the data to the most recent
+
+# Going to use Close Price, USD.
+```
+
+# BEGIN PROJECT
+
+```{r}
+dogeData <- load(file = "./data/DOGE.Rdata")
+```
+
+
+```{r}
+train_split <- window(dogecoin, end = 486)
 ```
 

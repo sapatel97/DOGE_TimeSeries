@@ -59,18 +59,33 @@ fit_ets <- ets(train)
 fc_ets <- forecast(fit_ets, h = length(test))
 plot(forecast(fit_ets))
 accuracy(fc_ets, test)
+
+checkresiduals(fit_ets)
 ```
+
 
 ```{r Holt Winters}
-fit1 <- holt(train) #additive Holt-Winters method
-fit2 <- hw(train, seasonal="multiplicative") #multiplicative Holt-Winters method
-fit3 <- hw(train, damped=TRUE) #additive Holt-Winter method with damped trend 
-fit4 <- hw(train, seasonal="multiplicative", damped=TRUE) #multiplicative Holt-Winter method with damped trend 
+doge_ts <- ts(doge_xts)
+doge_train <- ts(train)
 
+fit1 <- holt(doge_train, h = length(test)) #additive Holt-Winters method
+fit2 <- holt(doge_train, seasonal="multiplicative", h = length(test)) #multiplicative Holt-Winters method
+fit3 <- holt(doge_train, damped=TRUE, h = length(test)) #additive Holt-Winter method with damped trend 
+fit4 <- holt(doge_train, seasonal="multiplicative", damped=TRUE, h = length(test)) #multiplicative Holt-Winter method with damped trend 
 
-plot(fit1, ylim=c(20,60))
-lines(fit2$mean, col=2, lwd=2)
-lines(fit3$mean, col=3, lwd=2)
-lines(fit4$mean, col=5, lwd=2)
-lines(test, lwd=2)
+autoplot(window(doge_ts, end = 92)) +
+  autolayer(window(doge_ts, start = 92), series = "Test Data") +
+  autolayer(fit1$mean, series = "Additive HW", PI = FALSE) +
+  autolayer(fit2$mean, series = "Multiplicative HW", PI = FALSE) +
+  autolayer(fit3$mean, series = "Additive HW - Damped", PI = FALSE) +
+  autolayer(fit4$mean, series = "Multiplicative HW - Damped", PI = FALSE)
+
 ```
+
+```{r}
+checkresiduals(fit1)
+checkresiduals(fit2)
+checkresiduals(fit3)
+checkresiduals(fit4)
+```
+

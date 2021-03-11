@@ -1,0 +1,33 @@
+---
+title: "Benchmarks"
+author: "Brock Gallagher"
+date: "3/10/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(fBasics) 
+library(dplyr)
+library(ggplot2)
+library(forecast)
+library(tseries)
+
+
+data <- dogeparsed
+data <- data %>%  
+  select(1,9)
+
+
+dim(data)
+head(data) 
+tail(data) 
+mean(data$close..USD.) 
+sd(data$close..USD.)
+
+```
+
+

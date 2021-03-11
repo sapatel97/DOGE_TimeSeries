@@ -125,6 +125,27 @@ print("Drift Method")
 accuracy(drift_doge, window(doge_ts, start = 92))
 ```
 
+```{r}
+checkresiduals(mean_doge)
+ggPacf(residuals(mean_doge))
+```
+
+```{r}
+checkresiduals(naive_doge)
+ggPacf(residuals(naive_doge))
+```
+
+```{r}
+checkresiduals(snaive_doge)
+ggPacf(residuals(snaive_doge))
+```
+
+```{r}
+checkresiduals(drift_doge)
+ggPacf(residuals(drift_doge))
+```
+
+
 ARIMA Models
 
 ```{r ARIMA}
@@ -148,6 +169,9 @@ fcast_2 <- forecast(auto_arima, h = 24)
 accuracy(fcast_1, doge_xts_test) # MA(3)
 accuracy(fcast_2, doge_xts_test) # auto arima
 ```
+
+
+
 
 
 

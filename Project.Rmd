@@ -102,6 +102,8 @@ Still not great, lets try differencing
 doge_train <- doge_xts[1:92]
 doge_test <- doge_xts[93:116]
 
+doge_ts <- ts(doge_xts)
+
 doge_wts_train <- window(doge_xts, end = c("2021-02-14"))
 doge_wts_test <- window(doge_xts, start = c("2021-02-15"))
 

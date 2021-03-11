@@ -64,7 +64,7 @@ colnames(doge_xts) <- c("close")
 ```
 
 ```{r Plotting}
-autoplot(doge_xts[-1], main = "Dogecoin", ylab = "USD", xlab = "Time")
+autoplot(doge_xts[-1], main = "Dogecoin", xlab = "Time", ylab = "USD")
 ```
 
 ```{r Transformation}
@@ -74,28 +74,27 @@ BoxCox.lambda(doge_xts)
 plot(doge_xts)
 plot(BoxCox(doge_xts,lambda="auto"))
 plot(BoxCox(doge_xts,lambda = -.25))
-# Let's take the auto transformation data and use that
-doge_transformed <- BoxCox(doge_xts, lambda = "auto")
 ```
 
-```{r Explore the ACF before and after transformation}
-Acf(doge_xts)
-Acf(doge_transformed[,1])
+```{r Explore the ACF before and after transformation and differencing}
+Acf(doge_xts) # original
+Acf(BoxCox(doge_xts, lambda = "auto")) # transformed
+tsdisplay(diff(doge_xts)) # differencing
 ```
 
-Still not great, lets try differencing
+Differencing is the way to go.
 
 ```{r}
-# INSERT MICHAEL CODE
+doge_xts <- diff(doge_xts)
 ```
 
 
 ```{r Splitting the data}
-doge_train <- doge_xts[1:92]
-doge_test <- doge_xts[93:116]
+doge_xts_train <- doge_xts[1:92]
+doge_xts_test <- doge_xts[93:116]
 
 doge_ts <- ts(doge_xts)
-doge_train <- ts(doge_train)
+doge_train <- ts(doge_xts_train)
 ```
 
 Let's explore some simple forecasting methods
@@ -126,6 +125,29 @@ print("Drift Method")
 accuracy(drift_doge, window(doge_ts, start = 92))
 ```
 
+ARIMA Models
+
+```{r ARIMA}
+tsdisplay(doge_xts)
+
+arima_ma_2 <- arima(doge_xts_train, order = c(0,0,2))
+summary(arima_ma_2)
+auto_arima <- auto.arima(doge_xts_train, seasonal = FALSE)
+summary(auto_arima)
+
+tsdisplay(arima_ma_2$residuals) #Check the residuals
+tsdisplay(auto_arima$residuals) #Check the residuals
+
+fcast_1 <- forecast(arima_ma_2, h = 24)
+fcast_2 <- forecast(auto_arima, h = 24)
+```
+
+
+
+```{r ARIMA Accuracy}
+accuracy(fcast_1, doge_xts_test) # MA(3)
+accuracy(fcast_2, doge_xts_test) # auto arima
+```
 
 
 

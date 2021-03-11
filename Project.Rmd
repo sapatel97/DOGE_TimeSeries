@@ -66,12 +66,86 @@ str(dogeparsed)
 ```{r Data Cleaning}
 dogeparsed <- dogeparsed[c(1,9)]
 doge_xts <- xts(dogeparsed[-1], order.by = dogeparsed$timestamp, frequency = 1)
+doge_xts <- doge_xts[500:615]
 colnames(doge_xts) <- c("close")
 ```
 
 ```{r Plotting}
 autoplot(doge_xts[-1], main = "Dogecoin", ylab = "USD", xlab = "Time")
 ```
+
+```{r Transformation}
+BoxCox.lambda(doge_xts)
+# -.5 value returned so there is a need for some transformation
+
+# lets run it under the boxcox transformation auto and by manually setting the lamba value
+plot(doge_xts)
+plot(BoxCox(doge_xts,lambda="auto"))
+plot(BoxCox(doge_xts,lambda = -.25))
+# Let's take the auto transformation data and use that
+doge_transformed <- BoxCox(doge_xts, lambda = "auto")
+```
+
+```{r Explore the ACF before and after transformation}
+Acf(doge_xts)
+Acf(doge_transformed[,1])
+```
+
+Still not great, lets try differencing
+
+```{r}
+# INSERT MICHAEL CODE
+```
+
+
+```{r Splitting the data}
+doge_train <- doge_xts[1:92]
+doge_test <- doge_xts[93:116]
+
+doge_wts_train <- window(doge_xts, end = c("2021-02-14"))
+doge_wts_test <- window(doge_xts, start = c("2021-02-15"))
+
+length(doge_wts_train)
+length(doge_wts_test)
+```
+
+Let's explore some simple forecasting methods
+
+```{r Simple Forecasting Methods}
+mean_doge <- meanf(doge_wts_train, h = 24)
+naive_doge <- naive(doge_wts_train, h = 24)
+snaive_doge <- snaive(doge_wts_train, h = 24)
+drift_doge <- rwf(doge_wts_train, h = 24, drift = TRUE)
+
+autoplot(window(doge_ts, end = 92)) +
+  autolayer(window(doge_ts, start = 92), series = "Test Data") +
+  autolayer(mean_doge, series = "Average Method", PI = FALSE) +
+  autolayer(naive_doge, series = "Naive Method", PI = FALSE) +
+  autolayer(snaive_doge, series = "Seasonal Naive Method", PI = FALSE) +
+  autolayer(drift_doge, series = "Drift Method", PI = FALSE)
+
+# Seasonal Naive and Naive are the same here
+```
+
+```{r Measure Accuracy of Simple Forecasting Methods}
+print("Mean")
+accuracy(mean_doge, window(doge_ts, start = 92))
+print("Naive")
+accuracy(naive_doge, window(doge_ts, start = 92))
+print("Seasonal Naive")
+accuracy(snaive_doge, window(doge_ts, start = 92))
+print("Drift Method")
+accuracy(drift_doge, window(doge_ts, start = 92))
+```
+
+
+
+
+
+
+
+
+
 
 
 # ```{r Exploration}

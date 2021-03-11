@@ -126,6 +126,27 @@ print("Drift Method")
 accuracy(drift_doge, window(doge_ts, start = 92))
 ```
 
+```{r}
+checkresiduals(mean_doge)
+ggPacf(residuals(mean_doge))
+```
+
+```{r}
+checkresiduals(naive_doge)
+ggPacf(residuals(naive_doge))
+```
+
+```{r}
+checkresiduals(snaive_doge)
+ggPacf(residuals(snaive_doge))
+```
+
+```{r}
+checkresiduals(drift_doge)
+ggPacf(residuals(drift_doge))
+```
+
+
 
 
 

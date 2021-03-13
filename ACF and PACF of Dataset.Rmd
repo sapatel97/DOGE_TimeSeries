@@ -24,6 +24,11 @@ doge_xts <- doge_xts
 ggAcf(doge_xts)
 ggPacf(doge_xts)
 ```
+
+```{r}
+ACF_PACF_Dataset <- tsdisplay(doge_xts)
+```
+
 ```{r Create differenced dataset}
 diff_doge_xts <- diff(doge_xts)
 ```

@@ -41,7 +41,7 @@ tsdisplay(diff(doge_xts)) # After doing differencing, we have a better ACF that 
 ```{r}
 # Implement the differencing
 
-doge_xts <- (diff(doge_xts))
+diff_doge_xts <- (diff(doge_xts))
 
 # We want to split our data into training and testing
 
@@ -87,5 +87,9 @@ checkresiduals(fit1)
 checkresiduals(fit2)
 checkresiduals(fit3)
 checkresiduals(fit4)
+```
+
+```{r}
+save(doge_xts, file = "doge_xts.Rdata")
 ```
 

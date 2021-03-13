@@ -14,6 +14,7 @@ library(httr)
 library(forecast)
 library(xts)
 library(tseries)
+library(fGarch)
 ```
 
 
@@ -245,10 +246,24 @@ autoplot(window(doge_ts, end = 92), ylab = "Doge Coin Price") +
 ```
 
 ```{r GARCH Model}
-garch_model <- garch(doge_train, order = c(1, 1))
+garchm <- garchFit(~arma(2, 1)+garch(1,1), doge_train)
+summary(garchm)
 
-summary(garch_model)
+garch_predict <- predict(garchm, 24)
 
-plot(garch_model)
+accuracy(garch_predict$meanForecast, window(doge_ts, start = 93))
+
+garch_train_predict <- data.frame(doge_train)
+garch_predict_mean <- data.frame(garch_predict$meanForecast)
+colnames(garch_predict_mean) <- "close"
+
+fcast_garch <- ts(rbind(garch_train_predict, garch_predict_mean))
+
+autoplot(window(doge_ts, end = 92), ylab = "Doge Coin Price") +
+  autolayer(window(doge_ts, start = 92), series = "Test Data") +
+  autolayer(fcast_1, series = "MA(2)", PI = FALSE) +
+  autolayer(fcast_2, series = "Auto ARIMA", PI = FALSE) +
+  autolayer(fcast_3, series = "Auto ARIMA (lambda)", PI = FALSE) +
+  autolayer(window(fcast_garch, start = 92), series = "GARCH")
 ```
 

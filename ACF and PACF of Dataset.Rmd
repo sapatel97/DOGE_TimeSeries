@@ -10,6 +10,12 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
+load("~/MSBA/DogeCoin_TimeSeries/doge_xts.Rdata")
+doge_xts <- doge_xts
+```
 
+```{r ACF & PACF of entire Dataset}
+Acf(doge_xts)
+Pacf(doge_xts)
 ```
 

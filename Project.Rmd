@@ -249,6 +249,8 @@ autoplot(window(doge_ts, end = 92), ylab = "Doge Coin Price") +
 garchm <- garchFit(~arma(2, 1)+garch(1,1), doge_train)
 summary(garchm)
 
+# p value > .05 so we fail to reject the null hypothesis, so there is so evidence of any autocorrelation in the residuals. I believe we might be able to conclude there the residuals are acting as white noise.
+
 garch_predict <- predict(garchm, 24)
 
 accuracy(garch_predict$meanForecast, window(doge_ts, start = 93))

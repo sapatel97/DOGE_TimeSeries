@@ -39,7 +39,7 @@ tsdisplay(diff(doge_xts)) # After doing differencing, we have a better ACF that 
 ```
 
 ```{r}
-# Implement the differencing
+# Implement differencing
 
 diff_doge_xts <- (diff(doge_xts))
 
@@ -55,7 +55,7 @@ autoplot(doge_xts[-1], main = "Dogecoin", ylab = "USD", xlab = "Time")
 ```
 
 ```{r ETS Model}
-fit_ets <- ets(train)
+fit_ets <- ets(train, lambda = -.2568437)
 fc_ets <- forecast(fit_ets, h = length(test))
 plot(forecast(fit_ets))
 accuracy(fc_ets, test)
@@ -68,10 +68,10 @@ checkresiduals(fit_ets)
 doge_ts <- ts(doge_xts)
 doge_train <- ts(train)
 
-fit1 <- holt(doge_train, h = length(test)) #additive Holt-Winters method
-fit2 <- holt(doge_train, seasonal="multiplicative", h = length(test)) #multiplicative Holt-Winters method
-fit3 <- holt(doge_train, damped=TRUE, h = length(test)) #additive Holt-Winter method with damped trend 
-fit4 <- holt(doge_train, seasonal="multiplicative", damped=TRUE, h = length(test)) #multiplicative Holt-Winter method with damped trend 
+fit1 <- holt(doge_train, h = length(test), lambda = -.2568437) #additive Holt-Winters method
+fit2 <- holt(doge_train, seasonal="multiplicative", h = length(test), lambda = -.2568437) #multiplicative Holt-Winters method
+fit3 <- holt(doge_train, damped=TRUE, h = length(test), lambda = -.2568437) #additive Holt-Winter method with damped trend 
+fit4 <- holt(doge_train, seasonal="multiplicative", damped=TRUE, h = length(test), lambda = -.2568437) #multiplicative Holt-Winter method with damped trend 
 
 autoplot(window(doge_ts, end = 92)) +
   autolayer(window(doge_ts, start = 92), series = "Test Data") +

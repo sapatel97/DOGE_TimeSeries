@@ -82,11 +82,10 @@ doge_xts_diff <- diff(doge_xts)
 
 ```{r Splitting the data}
 doge_train <- doge_xts[1:92]
-doge_test <- doge_xts[93:116]
+doge_test <- doge_xts[,1][93:116]
 
 doge_ts <- ts(doge_xts)
 doge_train <- ts(doge_train)
-doge_test <- ts(doge_test)
 
 # differenced data
 doge_train_diff <- doge_xts_diff[1:92]
@@ -130,24 +129,24 @@ autoplot(window(doge_ts, end = 92), ylab = "Doge Coin Price") +
 
 ```{r Measure Accuracy of Simple Forecasting Methods}
 print("Mean")
-accuracy(mean_doge, window(doge_ts, start = 92))
+accuracy(mean_doge, doge_test)
 print("Naive")
-accuracy(naive_doge, window(doge_ts, start = 92))
+accuracy(naive_doge, doge_test)
 print("Seasonal Naive")
-accuracy(snaive_doge, window(doge_ts, start = 92))
+accuracy(snaive_doge, doge_test)
 print("Drift Method")
-accuracy(drift_doge, window(doge_ts, start = 92))
+accuracy(drift_doge, doge_test)
 ```
 
 ```{r Measure Accuracy of Simple Forecasting Methods with lambda}
 print("Mean")
-accuracy(mean_doge_l, window(doge_ts, start = 92))
+accuracy(mean_doge_l, doge_test)
 print("Naive")
-accuracy(naive_doge_l, window(doge_ts, start = 92))
+accuracy(naive_doge_l, doge_test)
 print("Seasonal Naive")
-accuracy(snaive_doge_l, window(doge_ts, start = 92))
+accuracy(snaive_doge_l, doge_test)
 print("Drift Method")
-accuracy(drift_doge_l, window(doge_ts, start = 92))
+accuracy(drift_doge_l, doge_test)
 ```
 
 ```{r}
@@ -182,6 +181,44 @@ checkresiduals(drift_doge_l)
 ggPacf(residuals(drift_doge_l))
 ```
 
+```{r ETS Model}
+fit_ets <- ets(doge_train, lambda = -.2568437)
+fc_ets <- forecast(fit_ets, h = length(doge_test))
+plot(forecast(fit_ets))
+accuracy(fc_ets, doge_test)
+
+checkresiduals(fit_ets)
+```
+
+
+```{r Holt Winters}
+fit1 <- holt(doge_train, h = length(doge_test), lambda = -.2568437) #additive Holt-Winters method
+fit2 <- holt(doge_train, seasonal="multiplicative", h = length(doge_test), lambda = -.2568437) #multiplicative Holt-Winters method
+fit3 <- holt(doge_train, damped=TRUE, h = length(doge_test), lambda = -.2568437) #additive Holt-Winter method with damped trend 
+fit4 <- holt(doge_train, seasonal="multiplicative", damped=TRUE, h = length(doge_test), lambda = -.2568437) #multiplicative Holt-Winter method with damped trend 
+
+autoplot(window(doge_ts, end = 92)) +
+  autolayer(window(doge_ts, start = 92), series = "Test Data") +
+  autolayer(fit1$mean, series = "Additive HW", PI = FALSE) +
+  autolayer(fit2$mean, series = "Multiplicative HW", PI = FALSE) +
+  autolayer(fit3$mean, series = "Additive HW - Damped", PI = FALSE) +
+  autolayer(fit4$mean, series = "Multiplicative HW - Damped", PI = FALSE)
+
+```
+
+```{r}
+checkresiduals(fit1)
+checkresiduals(fit2)
+checkresiduals(fit3)
+checkresiduals(fit4)
+```
+
+```{r}
+accuracy(forecast(fit1), doge_test) # Additive HW Method
+accuracy(forecast(fit2), doge_test) # Mult. HW Method
+accuracy(forecast(fit3), doge_test) # Add. HW Method Damped
+accuracy(forecast(fit4), doge_test) # Mult. HW Method Damped
+```
 
 ARIMA Models
 
@@ -225,18 +262,18 @@ fcast_3 <- forecast(auto_arima_lambda, h = 24)
 
 
 ```{r MA(2) Accuracy}
-accuracy(fcast_1, window(doge_ts, start = 93)) # MA(2)
+accuracy(fcast_1, doge_test) # MA(2)
 checkresiduals(fcast_1)
 ```
 
 ```{r Auto ARIMA Accuracy}
-accuracy(fcast_2, window(doge_ts, start = 93)) # auto arima
+accuracy(fcast_2, doge_test) # auto arima
 checkresiduals(fcast_2)
 ```
 
 
 ```{r Auto ARIMA (lambda) Accuracy}
-accuracy(fcast_3, window(doge_ts, start = 93)) # auto arima, lambda
+accuracy(fcast_3, doge_test) # auto arima, lambda
 checkresiduals(fcast_3)
 ```
 
@@ -256,7 +293,7 @@ summary(garchm)
 
 garch_predict <- predict(garchm, 24)
 
-accuracy(garch_predict$meanForecast, window(doge_ts, start = 93))
+accuracy(garch_predict$meanForecast, doge_test)
 
 garch_train_predict <- data.frame(doge_train)
 garch_predict_mean <- data.frame(garch_predict$meanForecast)

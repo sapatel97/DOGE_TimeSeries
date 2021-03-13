@@ -269,3 +269,9 @@ autoplot(window(doge_ts, end = 92), ylab = "Doge Coin Price") +
   autolayer(window(fcast_garch, start = 92), series = "GARCH")
 ```
 
+```{r GARCH Accuracy}
+accuracy(garch_predict$meanForecast, window(doge_ts, start = 93)) # auto arima, lambda
+```
+
+
+

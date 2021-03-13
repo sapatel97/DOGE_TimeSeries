@@ -90,6 +90,13 @@ checkresiduals(fit4)
 ```
 
 ```{r}
+accuracy(forecast(fit1),test) # Additive HW Method
+accuracy(forecast(fit2),test) # Mult. HW Method
+accuracy(forecast(fit3),test) # Add. HW Method Damped
+accuracy(forecast(fit4),test) # Mult. HW Method Damped
+```
+
+```{r}
 save(doge_xts, file = "doge_xts.Rdata")
 ```
 

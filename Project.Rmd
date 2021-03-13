@@ -226,15 +226,18 @@ fcast_3 <- forecast(auto_arima_lambda, h = 24)
 
 ```{r MA(2) Accuracy}
 accuracy(fcast_1, window(doge_ts, start = 93)) # MA(2)
+checkresiduals(fcast_1)
 ```
 
 ```{r Auto ARIMA Accuracy}
 accuracy(fcast_2, window(doge_ts, start = 93)) # auto arima
+checkresiduals(fcast_2)
 ```
 
 
 ```{r Auto ARIMA (lambda) Accuracy}
 accuracy(fcast_3, window(doge_ts, start = 93)) # auto arima, lambda
+checkresiduals(fcast_3)
 ```
 
 ```{r Plotting}
@@ -271,6 +274,7 @@ autoplot(window(doge_ts, end = 92), ylab = "Doge Coin Price") +
 
 ```{r GARCH Accuracy}
 accuracy(garch_predict$meanForecast, window(doge_ts, start = 93)) # auto arima, lambda
+
 ```
 
 

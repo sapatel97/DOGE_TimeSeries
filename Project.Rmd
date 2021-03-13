@@ -13,37 +13,27 @@ knitr::opts_chunk$set(echo = TRUE)
 library(httr)
 library(forecast)
 library(xts)
+library(tseries)
 ```
 
 
-```{r}
+```{r Pulling data from API}
 # API KEY: 0YR02HPT5Z0LVCHN
-# getFXData <- function(from_currency, to_currency) {
-#   # API KEY
-#   avKey <- "0YR02HPT5Z0LVCHN"
-#   baseLink <- "https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE"
-#   
-#   avLinkGenerator <- paste(baseLink, 
-#                            "&from_currency=", from_currency, "&to_currency", to_currency, "&interval=60min", "&datatype=csv",
-#                            "&apikey=", avKey, sep = "")
-#   
-#   avRequest <- GET(avLinkGenerator)
-#   avParsed <- read.delim(text = content(avRequest, as = "text"), sep = ",")
-#   avParsed$timestamp <- as.Date(avParsed$timestamp)
-#   return(avParsed)
-# }
-# 
-# silverSpot <- getFXData("USD", "XAG")
-# 
-# testsilver <- GET("https://www.alphavantage.co/query?function=FX_INTRADAY&datatype=csv&from_symbol=USD&to_symbol=XAG&interval=60min&apikey=0YR02HPT5Z0LVCHN")
-# 
-# silverparsed <- read.delim(text = content(testsilver, as = "text"), sep = ",")
+
 # doge_test <- GET("https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_DAILY&symbol=DOGE&market=CNY&datatype=csv&apikey=0YR02HPT5Z0LVCHN")
+
 # dogeparsed <- read.delim(text = content(doge_test, as = "text"), sep = ",")
 #save(dogeparsed, file = "./data/DOGE.Rdata")
 # only uncomment to update the data to the most recent
+
 # Going to use Close Price, USD.
 ```
+
+Start with a benchmark, and then include the lambda in auto.arima, look at week 3 for this example code
+combine week 3 and 4 together
+go with the lowest AIC
+check residuals
+
 
 # BEGIN PROJECT
 
@@ -64,7 +54,7 @@ colnames(doge_xts) <- c("close")
 ```
 
 ```{r Plotting}
-autoplot(doge_xts[-1], main = "Dogecoin", xlab = "Time", ylab = "USD")
+autoplot(ts(doge_xts), main = "Dogecoin", xlab = "Time", ylab = "USD")
 ```
 
 ```{r Transformation}
@@ -77,24 +67,34 @@ plot(BoxCox(doge_xts,lambda = -.25))
 ```
 
 ```{r Explore the ACF before and after transformation and differencing}
-Acf(doge_xts) # original
-Acf(BoxCox(doge_xts, lambda = "auto")) # transformed
+tsdisplay(doge_xts) # original
+tsdisplay(BoxCox(doge_xts, lambda = "auto")) # transformed
 tsdisplay(diff(doge_xts)) # differencing
 ```
 
 Differencing is the way to go.
 
 ```{r}
-doge_xts <- diff(doge_xts)
+doge_xts_diff <- diff(doge_xts)
 ```
 
 
 ```{r Splitting the data}
-doge_xts_train <- doge_xts[1:92]
-doge_xts_test <- doge_xts[93:116]
+doge_train <- doge_xts[1:92]
+doge_test <- doge_xts[93:116]
 
 doge_ts <- ts(doge_xts)
-doge_train <- ts(doge_xts_train)
+doge_train <- ts(doge_train)
+doge_test <- ts(doge_test)
+
+# differenced data
+doge_train_diff <- doge_xts_diff[1:92]
+doge_test_diff <- doge_xts_diff[93:116]
+
+doge_ts_diff <- ts(doge_xts)
+doge_train_diff <- ts(doge_train_diff)
+doge_test_diff  <- ts(doge_test_diff)
+
 ```
 
 Let's explore some simple forecasting methods
@@ -105,13 +105,26 @@ naive_doge <- naive(doge_train, h = 24)
 snaive_doge <- snaive(doge_train, h = 24)
 drift_doge <- rwf(doge_train, h = 24, drift = TRUE)
 
-autoplot(window(doge_ts, end = 92)) +
+autoplot(window(doge_ts, end = 92), ylab = "Doge Coin Price") +
   autolayer(window(doge_ts, start = 92), series = "Test Data") +
   autolayer(mean_doge, series = "Average Method", PI = FALSE) +
   autolayer(naive_doge, series = "Naive Method", PI = FALSE) +
   autolayer(snaive_doge, series = "Seasonal Naive Method", PI = FALSE) +
   autolayer(drift_doge, series = "Drift Method", PI = FALSE)
 # Seasonal Naive and Naive are the same here
+
+# using lamba in functions
+mean_doge_l <- meanf(doge_train, h = 24, lambda = -0.2568437)
+naive_doge_l <- naive(doge_train, h = 24, lambda = -0.2568437)
+snaive_doge_l <- snaive(doge_train, h = 24, lambda = -0.2568437)
+drift_doge_l <- rwf(doge_train, h = 24, drift = TRUE, lambda = -0.2568437)
+
+autoplot(window(doge_ts, end = 92), ylab = "Doge Coin Price") +
+  autolayer(window(doge_ts, start = 92), series = "Test Data") +
+  autolayer(mean_doge_l, series = "Average Method", PI = FALSE) +
+  autolayer(naive_doge_l, series = "Naive Method", PI = FALSE) +
+  autolayer(snaive_doge_l, series = "Seasonal Naive Method", PI = FALSE) +
+  autolayer(drift_doge_l, series = "Drift Method", PI = FALSE)
 ```
 
 ```{r Measure Accuracy of Simple Forecasting Methods}
@@ -125,24 +138,47 @@ print("Drift Method")
 accuracy(drift_doge, window(doge_ts, start = 92))
 ```
 
+```{r Measure Accuracy of Simple Forecasting Methods with lambda}
+print("Mean")
+accuracy(mean_doge_l, window(doge_ts, start = 92))
+print("Naive")
+accuracy(naive_doge_l, window(doge_ts, start = 92))
+print("Seasonal Naive")
+accuracy(snaive_doge_l, window(doge_ts, start = 92))
+print("Drift Method")
+accuracy(drift_doge_l, window(doge_ts, start = 92))
+```
+
 ```{r}
 checkresiduals(mean_doge)
 ggPacf(residuals(mean_doge))
+
+checkresiduals(mean_doge_l)
+ggPacf(residuals(mean_doge_l))
 ```
 
 ```{r}
 checkresiduals(naive_doge)
 ggPacf(residuals(naive_doge))
+
+checkresiduals(naive_doge_l)
+ggPacf(residuals(naive_doge_l))
 ```
 
 ```{r}
 checkresiduals(snaive_doge)
 ggPacf(residuals(snaive_doge))
+
+checkresiduals(snaive_doge_l)
+ggPacf(residuals(snaive_doge_l))
 ```
 
 ```{r}
 checkresiduals(drift_doge)
 ggPacf(residuals(drift_doge))
+
+checkresiduals(drift_doge_l)
+ggPacf(residuals(drift_doge_l))
 ```
 
 
@@ -150,110 +186,69 @@ ARIMA Models
 
 ```{r ARIMA}
 tsdisplay(doge_xts)
+tsdisplay(BoxCox(doge_xts, lambda = -0.2568437)) # transformed
+```
 
-arima_ma_2 <- arima(doge_xts_train, order = c(0,0,2))
+
+```{r MA(2)}
+arima_ma_2 <- arima(doge_train, order = c(0,0,2))
 summary(arima_ma_2)
-auto_arima <- auto.arima(doge_xts_train, seasonal = FALSE)
-summary(auto_arima)
+```
 
+
+```{r Auto ARIMA}
+auto_arima <- auto.arima(doge_train, seasonal = FALSE)
+summary(auto_arima)
+```
+
+
+```{r Auto ARIMA (lambda)}
+auto_arima_lambda <- auto.arima(doge_train, seasonal = FALSE, lambda = -0.2568437)
+summary(auto_arima_lambda)
+```
+
+
+```{r Residuals}
 tsdisplay(arima_ma_2$residuals) #Check the residuals
 tsdisplay(auto_arima$residuals) #Check the residuals
+tsdisplay(auto_arima_lambda$residuals) #Check the residuals
+```
 
+
+```{r Generate Forecast}
 fcast_1 <- forecast(arima_ma_2, h = 24)
 fcast_2 <- forecast(auto_arima, h = 24)
+fcast_3 <- forecast(auto_arima_lambda, h = 24)
 ```
 
 
 
-```{r ARIMA Accuracy}
-accuracy(fcast_1, doge_xts_test) # MA(3)
-accuracy(fcast_2, doge_xts_test) # auto arima
+```{r MA(2) Accuracy}
+accuracy(fcast_1, window(doge_ts, start = 93)) # MA(2)
+```
+
+```{r Auto ARIMA Accuracy}
+accuracy(fcast_2, window(doge_ts, start = 93)) # auto arima
 ```
 
 
+```{r Auto ARIMA (lambda) Accuracy}
+accuracy(fcast_3, window(doge_ts, start = 93)) # auto arima, lambda
+```
 
+```{r Plotting}
+autoplot(window(doge_ts, end = 92), ylab = "Doge Coin Price") +
+  autolayer(window(doge_ts, start = 92), series = "Test Data") +
+  autolayer(fcast_1, series = "MA(2)", PI = FALSE) +
+  autolayer(fcast_2, series = "Auto ARIMA", PI = FALSE) +
+  autolayer(fcast_3, series = "Auto ARIMA (lambda)", PI = FALSE)
+```
 
+```{r GARCH Model}
+garch_model <- garch(doge_train, order = c(1, 1))
 
+summary(garch_model)
 
+plot(garch_model)
+```
 
-
-
-
-
-
-
-# ```{r Exploration}
-# autoplot(doge_ts[-1], main = "Dogecoin", ylab = "USD", xlab = "Time")
-# autoplot(doge_xts[-1], main = "Dogecoin", ylab = "USD", xlab = "Time")
-# snaive(doge_xts)
-# hw(doge_ts)
-# rwf(doge_xts)
-# 
-# vis <- window(doge_ts, end=c(2020,1)) #training data
-# vis2 <- window(doge_ts, start=c(2020, 1))# Test data
-# library(tsstudio)
-# test <- xts_to_ts(doge_xts, frequency = NULL, start = NULL)
-# 
-# plot(meanf(beer1, h=20), plot.conf=FALSE) #Forecasts produced by Average of Past Values method
-#     lines(naive(beer1, h=20)$mean, col="red") #Forecasts produced by Naive method
-#     lines(snaive(beer1, h=20)$mean, col="green") #Forcasts produced by Seasonal naive method
-#     lines(rwf(beer1, h=20, drift=TRUE)$mean, col="pink") #Forecasts produced by Drift method
-#     lines(window(ausbeer,start=2004)) #Actual data
-# 
-# train = doge_xts[,1][1:150]
-# test = doge_xts[,1][151:164]
-# 
-# adf.test(train[,1]) #p-value < 0.01: the time series is stationary
-# Acf(train[,1]) #indicates MA(3) model
-# Pacf(train[,1])
-# 
-# fit <- Arima(train[,1],order = c(0,0,3))
-# summary(fit)
-# 
-# tsdisplay(fit$residuals) #Check the residuals
-# Box.test(fit$residuals,lag=15, fitdf=3, type='Ljung') #fitdf is because it was MA(3)
-# 
-# plot(forecast(fit,h=10),include=80)
-# 
-# fit_ETS <- ets(doge_xts)
-# 
-# plot(doge_xts)
-# fit <- ets(doge_xts)
-# fcast1 <-forecast(fit, h=20)
-# summary(fit)
-# plot(fit)
-# accuracy(fit)
-# accuracy(fcast1$fitted, doge_xts)
-# plot(forecast(fit,level=c(50,80,95)))
-# plot(forecast(fit,fan =TRUE))
-# ```
-# 
-# ```{r}
-# 
-# plot(doge_xts)
-# plot(BoxCox(doge_xts,lambda=1/2))## Transformations with lamda = 1/2
-# plot(BoxCox(doge_xts,lambda=0))## Transformations with lamda = 0, which is natural logarithm
-# plot(BoxCox(doge_xts,lambda=-1))## Transformations with lamda = -1
-# 
-# plot(BoxCox(doge_xts,lambda=0))
-# fit <- snaive(doge_xts, lambda=0)
-# plot(fit)
-# plot(fit, include=120)
-# 
-# BoxCox.lambda(doge_xts) #mathematically optimal lambda, lambda = 0.2654076
-# plot(BoxCox(doge_xts,lambda=BoxCox.lambda(doge_xts)))
-# 
-# ndiffs(doge_xts)
-# nsdiffs(log(doge_xts))
-# 
-# plot(doge_xts)
-# # No obvious need for a transformation
-# tsdisplay(diff(doge_xts))
-# 
-# fit2 <- auto.arima(doge_xts)
-# summary(fit2)
-# # Over-ride choice of differencing, and only use one difference
-# fit3 <- auto.arima(doge_xts, d=2)
-# summary(fit3)
-# 
-# ```
